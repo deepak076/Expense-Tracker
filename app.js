@@ -13,15 +13,27 @@ app.use(bodyParser.json());
 // Use the expense routes
 app.use('/', expensesRoute);
 
-app.get('/expenses', (req,res) =>{
-    db.query('SELECT * FROM expense', (err, result) =>{
-        if(err){
-            console.error(err);
-            return res.status(500).json({ error: 'An error occurred while retrieving expenses.' });
+app.get('/expenses/:id', (req, res) => {
+    const expenseId = parseInt(req.params.id);
+
+    // Use your database query to fetch the expense by ID
+    db.query('SELECT * FROM expense WHERE id = ?', [expenseId], (err, results) => {
+        if (err) {
+            console.error('Error fetching expense', err);
+            return res.status(500).json({ error: 'An error occurred while fetching the expense.' });
         }
-        res.json(result);
+
+        if (results.length === 0) {
+            // Expense not found, return a 404 response with an appropriate error message
+            return res.status(404).json({ error: 'Expense not found' });
+        }
+
+        const expense = results[0]; // Assuming there's only one result
+        res.json(expense);
     });
 });
+
+
 
 app.post('/expenses', (req,res) =>{
     const {amount, description} = req.body;

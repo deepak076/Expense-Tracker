@@ -28,7 +28,15 @@ function renderExpenses(data) {
             const editButton = document.createElement("button");
             editButton.textContent = "Edit";
             editButton.className = "btn btn-primary";
-            editButton.addEventListener("click", () => handleEditExpense(index));
+
+            // Set the data-id attribute to the database ID
+            editButton.setAttribute("data-id", expense.id);
+
+            // Pass the data-id attribute value to handleEditExpense
+            editButton.addEventListener("click", (event) => {
+                const id = event.target.getAttribute("data-id");
+                handleEditExpense(id);
+            });
 
             li.appendChild(deleteButton);
             li.appendChild(editButton);
@@ -48,26 +56,30 @@ function addExpense(amount, description) {
         },
         body: JSON.stringify(newExpense),
     })
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 201) {
+                // Successfully added expense, return the added expense data
+                return response.json();
+            } else {
+                console.error('Error adding expense:', response.statusText);
+                throw new Error('Failed to add expense');
+            }
+        })
         .then(data => {
             console.log('Expense added successfully:', data);
 
-            // Fetch and render the updated list of expenses from the server
-            fetch('/expenses')
-                .then(response => response.json())
-                .then(data => {
-                    renderExpenses(data);
-                })
-                .catch(err => {
-                    console.error('Error fetching expenses:', err);
-                });
+            // Append the newly added expense to the current list of expenses
+            expenses.push(data); // Assuming 'expenses' is an array that stores all expenses
+            renderExpenses(expenses); // Render the updated list of expenses
+
+            // Clear the input fields
+            amountInput.value = "";
+            descriptionInput.value = "";
         })
         .catch(err => {
             console.error('Error:', err);
         });
 }
-
-
 
 function handleDeleteExpense(id) {
     fetch(`/expenses/${id}`, {
@@ -93,25 +105,23 @@ function handleDeleteExpense(id) {
         });
 }
 
-function handleEditExpense(index) {
-    console.log('Edit button clicked for index:', index);
+function handleEditExpense(id) {
+    console.log('Edit button clicked for ID:', id);
 
-    // Fetch the specific expense to edit from the server
-    fetch(`/expenses/${index}`)
+    // Fetch the specific expense to edit from the server using the correct ID
+    fetch(`/expenses/${id}`)
         .then(response => response.json())
         .then(data => {
             amountInput.value = data.amount !== undefined ? data.amount : "";
             descriptionInput.value = data.description !== undefined ? data.description : "";
 
-            editIndex = index;
+            editIndex = id; // Use the correct ID
         })
         .catch(err => {
             console.error('Error fetching expense:', err);
         });
 }
 
-
-// Handle form submission for both adding and editing expenses
 function handleForm(event) {
     event.preventDefault();
     const amount = parseFloat(amountInput.value);
@@ -125,7 +135,7 @@ function handleForm(event) {
     if (editIndex !== null) {
         const updatedExpense = { amount, description };
         fetch(`/expenses/${editIndex}`, {
-            method: 'PUT', // Use PUT method to update
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -133,8 +143,8 @@ function handleForm(event) {
         })
             .then(response => {
                 if (response.status === 200) {
-                    // Update the expense in the frontend
-                    renderExpenses(expenses); // Re-render expenses from data, no need for expenses array
+                    // Successfully updated expense, no need to maintain 'expenses' array
+                    renderExpenses(); // Fetch and render expenses from the server
                 } else {
                     console.error('Error updating expense:', response.statusText);
                 }
@@ -145,12 +155,32 @@ function handleForm(event) {
 
         editIndex = null;
     } else {
-        addExpense(amount, description);
+        const newExpense = { amount, description };
+        console.log('Sending data to server:', newExpense);
+        fetch('/expenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newExpense),
+        })
+            .then(response => {
+                if (response.status === 201) {
+                    // Successfully added expense, no need to maintain 'expenses' array
+                    renderExpenses(); // Fetch and render expenses from the server
+                } else {
+                    console.error('Error adding expense:', response.statusText);
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+            });
     }
 
     amountInput.value = "";
     descriptionInput.value = "";
 }
+
 
 expenseForm.addEventListener("submit", handleForm);
 document.getElementById("cancelBtn").addEventListener("click", () => {
