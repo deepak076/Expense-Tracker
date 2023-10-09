@@ -1,0 +1,38 @@
+<!-- /public/index.html  -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Expense Tracker</h1>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <input type="number" class="form-control" id="amount" placeholder="Amount" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="description" placeholder="Description" required>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">Add Expense</button>
+                        <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-6">
+                <ul id="expenseList" class="list-group">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="et.js"></script>
+</body>
+</html>
